@@ -61,6 +61,15 @@ def VerificaArquivos(resposta, url):
 			whitelisturl = 0
 		fobject.close()
 		
+		fobject = open("denyterms.txt", "r")
+		termos = fobject.readlines()
+		print(termos)
+		termos = ['BLACKLIST_DOMAINS']
+		for i in range(0, len(config['BLACKLIST_DOMAINS'])):
+    		if config['BLACKLIST_DOMAINS'][i] in url:
+        		conn.close()
+		return	
+		
 		return((blacklisturl,whitelisturl))	
 	except Exception, ErroArquivos:
 		print("Houve um erro no gerenciamento de arquivos de permissoes: ", ErroArquivos)
