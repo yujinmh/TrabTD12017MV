@@ -89,3 +89,49 @@ def VerificaArquivos(conn, resposta, host):
 	except KeyboardInterrupt:
 		print("Interrupcao do usuario.")
 		sys.exit(1)
+		
+def RespostaProxy(conn, addr, resposta, flags, host):
+	
+	blacklisturl = flags[0]
+	whitelisturl = flags[1]
+	print("teste: ", blacklisturl, whitelisturl, flags[0], flags[1])
+	try:
+		if (blacklisturl==0 and whitelisturl==1):
+			proxysocket = socket(AF_INET, SOCK_STREAM)
+			print(host)
+			print(resposta)
+			proxysocket.connect((host, 80))
+			proxysocket.send(resposta)
+
+			while True:
+				recebeu = proxysocket.recv(8192)
+				if len(recebeu)>0:
+					fobj = open("Memoria.txt", "w+")
+					tamanho = len(recebeu)
+					fobj.writelines(recebeu)
+					conn.send(recebeu)
+				else:
+					break
+
+			fobj.close()
+			proxysocket.close()
+			conn.close()
+			sys.exit(1)
+
+		elif (blacklisturl==1):
+			print("Site Bloqueado: Esta na Blacklist")
+
+		else:
+			print("Site nao esta na whitelist.")
+			sys.exit(1)
+
+	except Exception, ErroRespostaProxy:
+		print("Houve um erro ao postar a resposta: ", ErroRespostaProxy)
+		sys.exit(1)
+
+	except KeyboardInterrupt:
+		print("Interrupcao do usuario.")
+		sys.Exception(1)
+
+IniciaSocket()
+	
