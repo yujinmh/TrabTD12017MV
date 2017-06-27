@@ -3,6 +3,8 @@ from thread import *
 from time import *
 import sys
 
+
+
 def IniciaSockets():	#Funcao que inicia sockets e comeca a ouvir requisicoes do browser
 	try:
 		server = socket(AF_INET, SOCK_STREAM)
@@ -65,9 +67,8 @@ def Tratamento(conn, addr, resposta):
 
 def VerificaArquivos(conn, resposta, host):
 	try:
-		fobject = open("blacklist.txt", "r")  #blacklist: tratamento
+		fobject = open("blacklist.txt", "r")  
 		proibidos = fobject.read().splitlines()
-		print (proibidos)
 		if host in proibidos:
 			blacklisturl = 1
 		else:
@@ -82,6 +83,19 @@ def VerificaArquivos(conn, resposta, host):
 			whitelisturl = 0
 		fobject.close()
 
+		fobject = open("denyterms.txt", "r")
+		termos = fobject.read().splitlines()
+		for termo in termos:
+			sleep(1)
+			if termo in resposta:
+				temdeny = 1
+			else:
+				temdeny = 0
+		if (whitelisturl==1 and temdeny == 1):
+			whitelisturl=0
+		if (blacklisturl==0 and temdeny == 1):
+			blacklisturl == 1
+
 		return((blacklisturl,whitelisturl))	
 	except Exception, ErroArquivos:
 		print("Houve um erro no gerenciamento de arquivos de permissoes: ", ErroArquivos)
@@ -89,12 +103,10 @@ def VerificaArquivos(conn, resposta, host):
 	except KeyboardInterrupt:
 		print("Interrupcao do usuario.")
 		sys.exit(1)
-		
+
 def RespostaProxy(conn, addr, resposta, flags, host):
-	
 	blacklisturl = flags[0]
 	whitelisturl = flags[1]
-	print("teste: ", blacklisturl, whitelisturl, flags[0], flags[1])
 	try:
 		if (blacklisturl==0 and whitelisturl==1):
 			proxysocket = socket(AF_INET, SOCK_STREAM)
@@ -102,36 +114,32 @@ def RespostaProxy(conn, addr, resposta, flags, host):
 			print(resposta)
 			proxysocket.connect((host, 80))
 			proxysocket.send(resposta)
-
 			while True:
 				recebeu = proxysocket.recv(8192)
 				if len(recebeu)>0:
-					fobj = open("Memoria.txt", "w+")
+					fobj = open("Memoria.txt", "a")
 					tamanho = len(recebeu)
 					fobj.writelines(recebeu)
 					conn.send(recebeu)
 				else:
 					break
-
 			fobj.close()
 			proxysocket.close()
 			conn.close()
 			sys.exit(1)
-
-		elif (blacklisturl==1):
-			print("Site Bloqueado: Esta na Blacklist")
-
-		else:
-			print("Site nao esta na whitelist.")
+		elif(blacklisturl==1):
+			print("Site Bloqueado: Esta na Blacklist ou tem deny terms.")
+			sys.exit()
+		elif(whitelisturl==0):
+			print("Site nao esta na whitelist ou tem deny terms.")
 			sys.exit(1)
 
 	except Exception, ErroRespostaProxy:
 		print("Houve um erro ao postar a resposta: ", ErroRespostaProxy)
 		sys.exit(1)
-
 	except KeyboardInterrupt:
 		print("Interrupcao do usuario.")
-		sys.Exception(1)
+		sys.exit(1)
 
-IniciaSocket()
 	
+IniciaSockets()
